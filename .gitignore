@@ -1,0 +1,53 @@
+# Python
+pycache/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual Environment
+venv/
+env/
+.env/
+.venv/
+
+# Environment Variables
+.env
+.env.local
+.env.production
+
+# Django
+*.log
+local_settings.py
+media/
+
+# Database
+*.sqlite3
+*.db
+
+# Static files
+staticfiles/
+static_root/
+
+# Migrations (Ø§Ø®ØªÙŠØ§Ø±ÙŠ â€” Ø´ÙŠÙ„ # Ù„Ùˆ ØªØ±ÙŠØ¯ ØªØªØ¬Ø§Ù‡Ù„Ù‡Ø§)
+# */migrations/*.py
+# !*/migrations/init.py
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
