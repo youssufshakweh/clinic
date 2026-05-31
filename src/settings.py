@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,15 +38,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users',
-    'patients',
-    'appointments',
-    'nutritionists',
-    'clinic',
-    'notifications',
-    'subscriptions',
-    'payments',
-    'publications'   
+
+    # Apps
+    'users.apps.UsersConfig',
+    'patients.apps.PatientsConfig',
+    'appointments.apps.AppointmentsConfig',
+    'nutritionists.apps.NutritionistsConfig',
+    'clinic.apps.ClinicConfig',
+    'notifications.apps.NotificationsConfig',
+    'subscriptions.apps.SubscriptionsConfig',
+    'payments.apps.PaymentsConfig',
+    'publications.apps.PublicationsConfig',
+
+    # Rest Framework
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -126,3 +132,20 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 AUTH_USER_MODEL = 'users.User'
+
+
+# Rest Framework settings 
+
+# session && JWT Auth
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+# مدة الجلسة 30 يوم
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+}

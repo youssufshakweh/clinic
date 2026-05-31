@@ -40,3 +40,9 @@ class User(AbstractUser):
             return today.year - self.birth_date.year - ((today.month, today.day) < 
                                                         (self.birth_date.month, self.birth_date.day) )
         return None
+    
+        
+    # تسجيل الدخول عن طريق الايميل
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+    

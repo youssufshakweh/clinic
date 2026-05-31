@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class UsersConfig(AppConfig):
+class ClinicConfig(AppConfig):
     name = 'clinic'
 
     def ready(self):
