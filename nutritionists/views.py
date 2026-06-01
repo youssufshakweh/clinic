@@ -3,6 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
+
 from django.db.models import Q
 
 from .models import Product
@@ -13,7 +15,8 @@ class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
     permission_classes = [IsNutritionistOwnerOrReadOnly]  # ← هون التغيير
-
+    pagination_class = PageNumberPagination
+    pagination_class.page_size = 10
     def perform_create(self, serializer):
         nutritionist = self.request.user.nutritionist_profile
         serializer.save(nutritionist=nutritionist)

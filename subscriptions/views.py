@@ -1,6 +1,7 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import Count
 
 from .models import Package
@@ -9,7 +10,8 @@ from .serializers import PackageSerializer
 class PackageViewSet(ModelViewSet):
     queryset = Package.objects.all().order_by('-created_at')
     serializer_class = PackageSerializer
-
+    pagination_class = PageNumberPagination
+    pagination_class.page_size = 10
     @action(detail=False, methods=['get'])
     def stats(self, request):
         # احصاء عدد الاشتراكات لكل باقة
