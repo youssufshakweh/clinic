@@ -1,34 +1,30 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework import status
 from django.db.models import Q
 
 from .models import Product
 from .serializers import ProductSerializer
-
+from .permissions import IsNutritionistOwnerOrReadOnly
 
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsNutritionistOwnerOrReadOnly]  # ← هون التغيير
 
-    # إنشاء المنتج وربطه بالأخصائي
     def perform_create(self, serializer):
         nutritionist = self.request.user.nutritionist_profile
         serializer.save(nutritionist=nutritionist)
 
-    # فلترة + بحث
     def get_queryset(self):
         queryset = Product.objects.all().order_by('-created_at')
 
-        # فلترة حسب النوع
         product_type = self.request.query_params.get("type")
         if product_type:
             queryset = queryset.filter(type=product_type)
 
-        # البحث
         search = self.request.query_params.get("search")
         if search:
             queryset = queryset.filter(
@@ -39,15 +35,13 @@ class ProductViewSet(ModelViewSet):
 
         return queryset
 
-    # زيادة الكمية
     @action(detail=True, methods=['post'])
     def increase_quantity(self, request, pk=None):
-        product = self.get_object()
+        product = self.get_object()  # has_object_permission بتشتغل هون تلقائياً
         product.quantity += 1
         product.save()
         return Response({"quantity": product.quantity})
 
-    # نقصان الكمية
     @action(detail=True, methods=['post'])
     def decrease_quantity(self, request, pk=None):
         product = self.get_object()
@@ -56,7 +50,6 @@ class ProductViewSet(ModelViewSet):
             product.save()
         return Response({"quantity": product.quantity})
 
-    # رفع صورة المنتج فقط
     @action(detail=True, methods=['post'])
     def upload_image(self, request, pk=None):
         product = self.get_object()
@@ -73,7 +66,6 @@ class ProductViewSet(ModelViewSet):
             "img_url": request.build_absolute_uri(product.img.url)
         })
 
-    # تفعيل/تعطيل المنتج
     @action(detail=True, methods=['post'])
     def toggle_available(self, request, pk=None):
         product = self.get_object()

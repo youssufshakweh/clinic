@@ -9,12 +9,17 @@ class MeasurementSerializer(serializers.ModelSerializer):
         model = Measurement
         fields = '__all__'
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient.user.field.related_model
+        fields = ['id', 'username', 'first_name', 'last_name', 'email','address']
+        read_only_fields = ['id', 'username', 'first_name', 'last_name', 'email']
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = [
-            'id', 'user', 'email', 'phone', 'gender', 'birth_date',
-            'address', 'height', 'start_weight', 'profile_image',
+            'id', 'user',
+            'height', 'start_weight', 'profile_image',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
