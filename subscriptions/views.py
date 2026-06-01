@@ -6,7 +6,6 @@ from django.db.models import Count
 from .models import Package
 from .serializers import PackageSerializer
 
-
 class PackageViewSet(ModelViewSet):
     queryset = Package.objects.all().order_by('-created_at')
     serializer_class = PackageSerializer
