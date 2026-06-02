@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-s*36ypn$_#&zt2r4r7)e6goi_yy8wr8phm*&u#t(^9w5544#fa
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -55,6 +55,9 @@ INSTALLED_APPS = [
 
     # suagger ui
     'drf_spectacular',
+
+    # corsheaders
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -65,8 +68,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
 
+    "corsheaders.middleware.CorsMiddleware",
+]
+CORS_ALLOWED_ORIGINS = [
+    "https://my-react-app.netlify.app"
+]
+CORS_ALLOW_ALL_ORIGINS = True # مؤقت
 ROOT_URLCONF = 'src.urls'
 
 TEMPLATES = [
@@ -137,7 +145,7 @@ STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'users.User'
 
 
-# Rest Framework settings 
+# Rest Framework settings
 
 # session && JWT Auth
 REST_FRAMEWORK = {
@@ -161,3 +169,9 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
+
+STATIC_URL = '/static/'
+STATIC_ROOT = '/home/clinicproject4th/clinic/static/'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = '/home/clinicproject4th/clinic/media/'
