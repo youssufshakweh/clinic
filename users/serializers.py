@@ -27,7 +27,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         
         user = User.objects.create(**validated_data)
         user.set_password(password)
-        # توليد OTP
         user.generate_otp()
         user.save()
         
@@ -35,7 +34,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class ForgotPasswordSerializer(serializers.Serializer):
-    """طلب استعادة كلمة المرور"""
     email = serializers.EmailField()
     
     def validate_email(self, value):
@@ -59,11 +57,9 @@ class VerifyOTPSerializer(serializers.Serializer):
         except User.DoesNotExist:
             raise serializers.ValidationError({"email": "البريد الالكتروني غير موجود"})
         
-        # التحقق من الرمز
         if not user.verify_otp(data['otp']):
             raise serializers.ValidationError({"otp": "الرمز غير صحيح أو انتهت صلاحيته"})
         
-        # التحقق من توافق كلمات المرور
         if data['new_password'] != data['new_password_confirm']:
             raise serializers.ValidationError({"password": "كلمات المرور غير متطابقة"})
         
