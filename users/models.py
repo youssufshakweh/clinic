@@ -33,12 +33,10 @@ class User(AbstractUser):
         null=True
     )
 
-    # OTP للتحقق من البريد والاستعادة
     otp = models.CharField(max_length=6, blank=True, null=True)
     otp_created_at = models.DateTimeField(blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     
-    # استعادة كلمة المرور
     reset_token = models.CharField(max_length=100, blank=True, null=True)
     reset_token_created_at = models.DateTimeField(blank=True, null=True)
 

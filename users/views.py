@@ -35,7 +35,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return [AllowAny()]
         return super().get_permissions()
     
-    # ============ 1️⃣ التسجيل (Sign Up) ============
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def register(self, request):
         """تسجيل مستخدم جديد"""
@@ -43,7 +42,6 @@ class UserViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             user = serializer.save()
             
-            # إرسال OTP عبر البريد
             try:
                 otp_code = user.otp
                 send_mail(
@@ -61,11 +59,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 'user': UserSerializer(user).data
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    # ============ 2️⃣ تسجيل الدخول (Login) ============
-    # يتم عبر /api/token/ (JWT Token)
-    
-    # ============ 3️⃣ نسيان كلمة المرور ============
+
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def forgot_password(self, request):
         """طلب استعادة كلمة المرور"""
@@ -74,10 +68,8 @@ class UserViewSet(viewsets.ModelViewSet):
             email = serializer.validated_data['email']
             user = User.objects.get(email=email)
             
-            # توليد OTP
             otp_code = user.generate_otp()
             
-            # إرسال OTP عبر البريد
             try:
                 send_mail(
                     subject='رمز استعادة كلمة المرور',
@@ -95,10 +87,8 @@ class UserViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    # ============ 4️⃣ التحقق من الرمز (OTP Verification) ============
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def verify_otp(self, request):
-        """التحقق من الرمز وتعيين كلمة المرور الجديدة"""
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -109,7 +99,6 @@ class UserViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    # ============ 5️⃣ تغيير كلمة المرور ============
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def change_password(self, request):
         """تغيير كلمة المرور للمستخدم المسجل"""
@@ -124,7 +113,6 @@ class UserViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # تعيين كلمة المرور الجديدة
             user.set_password(serializer.validated_data['new_password'])
             user.save()
             
@@ -132,10 +120,8 @@ class UserViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    # ============ 6️⃣ معلومات المستخدم الحالي ============
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
-        """جلب بيانات المستخدم الحالي"""
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
