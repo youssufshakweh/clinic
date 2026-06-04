@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
-from datetime import date
+from datetime import date, timedelta
 from django.core.validators import RegexValidator
+import random
 
 class User(AbstractUser):
     
@@ -27,8 +28,17 @@ class User(AbstractUser):
 
     address = models.CharField(
         max_length=255,
-        verbose_name='العنوان'
+        verbose_name='العنوان',
+        blank=True,
+        null=True
     )
+
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    otp_created_at = models.DateTimeField(blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
+    
+    reset_token = models.CharField(max_length=100, blank=True, null=True)
+    reset_token_created_at = models.DateTimeField(blank=True, null=True)
 
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
@@ -41,6 +51,23 @@ class User(AbstractUser):
                                                         (self.birth_date.month, self.birth_date.day) )
         return None
     
+    def generate_otp(self):
+        """توليد رمز OTP عشوائي"""
+        self.otp = str(random.randint(100000, 999999))
+        self.otp_created_at = timezone.now()
+        self.save()
+        return self.otp
+    
+    def verify_otp(self, otp_code):
+        """التحقق من صحة الرمز والوقت"""
+        if self.otp != otp_code:
+            return False
+        
+        # تحقق من انتهاء صلاحية الرمز (10 دقائق)
+        if timezone.now() - self.otp_created_at > timedelta(minutes=10):
+            return False
+        
+        return True
         
     # تسجيل الدخول عن طريق الايميل
     USERNAME_FIELD = 'email'
