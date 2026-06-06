@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'subscriptions.apps.SubscriptionsConfig',
     'payments.apps.PaymentsConfig',
     'publications.apps.PublicationsConfig',
+    'contact.apps.ContactConfig',
 
     # Rest Framework
     'rest_framework',
