@@ -55,3 +55,13 @@ class WorkshopSerializer(serializers.ModelSerializer):
             'updated_at'
         ]
         read_only_fields = ['workshop_id', 'created_at', 'updated_at']
+
+
+class WorkshopListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Workshop
+        fields = ['workshop_id', 'title', 'date', 'overview', 'img']
+
+
+class WorkshopJoinRequestSerializer(serializers.Serializer):
+    workshop = serializers.PrimaryKeyRelatedField(queryset=Workshop.objects.all())
