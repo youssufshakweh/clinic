@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from subscriptions.views import PackageViewSet
+from subscriptions.views import PackageViewSet, WorkshopViewSet
+from publications.views import PublicationViewSet
 from patients.views import PatientViewSet
 from nutritionists.views import ProductViewSet
 from users.views import UserViewSet
@@ -21,7 +22,8 @@ router.register('api/packages', PackageViewSet, basename='packages')
 router.register('api/patients', PatientViewSet, basename='patients')
 router.register('api/products', ProductViewSet, basename='products')
 router.register('api/users', UserViewSet, basename='users')
-
+router.register('api/workshop', WorkshopViewSet, basename='workshops')
+router.register('api/publications', PublicationViewSet, basename='publications')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -33,12 +35,6 @@ urlpatterns = [
 
     # Contact
     path('api/contact/', include('contact.urls')),
-
-    # Publications
-    path('api/publications/', include('publications.urls')),
-
-    # Workshops
-    path('api/workshops/', include('subscriptions.urls')),
 
     # Optional UI:
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
