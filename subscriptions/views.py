@@ -4,6 +4,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from utils.permissions import IsPatientUser
 from django.db.models import Count
 
 from .models import Package, Workshop, PatientWorkshop
@@ -68,7 +69,7 @@ class WorkshopViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_permissions(self):
         if self.action == 'register':
-            return [IsAuthenticated()]
+            return [IsPatientUser()]
         return [AllowAny()]
 
     @action(detail=True, methods=['post'])

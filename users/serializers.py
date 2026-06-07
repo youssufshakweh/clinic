@@ -86,3 +86,24 @@ class ChangePasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({"password": "كلمات المرور الجديدة غير متطابقة"})
         return data
 
+
+class SimpleRegisterSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    name = serializers.CharField(max_length=150)
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("البريد الالكتروني مستخدم بالفعل")
+        return value
+
+    def create(self, validated_data):
+        user = User(
+            email=validated_data['email'],
+            username=validated_data['name'],
+        )
+        user.set_password(validated_data['password'])
+        user.generate_otp()
+        user.save()
+        return user
+

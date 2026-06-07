@@ -13,11 +13,15 @@ class Patient(models.Model):
     
 
     height = models.FloatField(
-        verbose_name="الطول"
+        verbose_name="الطول",
+        null=True,
+        blank=True
     )
 
     start_weight = models.FloatField(
-        verbose_name="الوزن عند البدء"
+        verbose_name="الوزن عند البدء",
+        null=True,
+        blank=True
     )
 
     profile_image = models.ImageField(
@@ -106,10 +110,4 @@ class PatientInitialInfo(models.Model):
     has_pcos = models.BooleanField(default=False)
     has_irregular_period = models.BooleanField(default=False)
 
-    # أدوية
-    takes_cortisone = models.BooleanField(default=False)
-    takes_birth_control = models.BooleanField(default=False)
-    takes_allergy_med = models.BooleanField(default=False)
-    takes_glucose_regulator = models.BooleanField(default=False)
-    takes_cycle_regulator = models.BooleanField(default=False)
-    takes_retan = models.BooleanField(default=False)
+ 

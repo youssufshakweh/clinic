@@ -1,7 +1,8 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from patients.models import Patient
 from appointments.models import Appointment
-from nutritionists.models import Nutritionist
+from nutritionists.models import Nutritionist, Product
 from subscriptions.models import Package
 
 
@@ -12,14 +13,14 @@ class Payment(models.Model):
         ('failed', 'فشل'),
         ('refunded', 'مرجع'),
     ]
-    
+
     TYPE_CHOICES = [
         ('appointment', 'موعد'),
         ('product', 'منتج'),
         ('package', 'باقة'),
         ('workshop', 'ورشة عمل'),
     ]
-    
+
     payment_id = models.AutoField(primary_key=True)
 
     patient = models.ForeignKey(
@@ -47,150 +48,155 @@ class Payment(models.Model):
         verbose_name='أخصائي التغذية'
     )
 
-    # from django.db import models
+    package = models.ForeignKey(
+        Package,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='payments',
+        verbose_name='الباقة'
+    )
+
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='المبلغ')
+    date = models.DateField(verbose_name='التاريخ')
+    time = models.TimeField(verbose_name='الوقت')
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        verbose_name='الحالة'
+    )
+
+    type = models.CharField(
+        max_length=50,
+        choices=TYPE_CHOICES,
+        verbose_name='النوع'
+    )
+
+    payment_method = models.CharField(max_length=50, blank=True, verbose_name='طريقة الدفع')
+
+    transaction_id = models.CharField(
+        max_length=255,
+        blank=True,
+        unique=True,
+        verbose_name='معرف المعاملة'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'payment'
+        verbose_name = 'دفعة'
+        verbose_name_plural = 'الدفعات'
+        ordering = ['-date', '-time']
+        indexes = [
+            models.Index(fields=['patient', 'status']),
+            models.Index(fields=['transaction_id']),
+        ]
+
+    def __str__(self):
+        return f"{self.patient} - {self.amount} - {self.status}"
 
 
-class Payment(models.Model):
+class Cart(models.Model):
+    cart_id = models.AutoField(primary_key=True)
+    patient = models.OneToOneField(
+        Patient,
+        on_delete=models.CASCADE,
+        related_name='cart'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Cart - {self.patient}"
+
+
+class CartItem(models.Model):
+    cart_item_id = models.AutoField(primary_key=True)
+    cart = models.ForeignKey(
+        Cart,
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    package = models.ForeignKey(
+        Package,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cart_items'
+    )
+    quantity = models.PositiveIntegerField(default=1)
+
+    def save(self, *args, **kwargs):
+        if self.product and self.package:
+            raise ValidationError('CartItem cannot have both product and package.')
+        if not self.product and not self.package:
+            raise ValidationError('CartItem must have either a product or a package.')
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        item = self.product or self.package
+        return f"{item} x {self.quantity}"
+
+
+class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'قيد الانتظار'),
-        ('completed', 'مكتمل'),
-        ('failed', 'فشل'),
-        ('refunded', 'مرجع'),
+        ('confirmed', 'مؤكد'),
+        ('cancelled', 'ملغى'),
     ]
-    
-    TYPE_CHOICES = [
-        ('appointment', 'موعد'),
-        ('product', 'منتج'),
-        ('package', 'باقة'),
-        ('workshop', 'ورشة عمل'),
-    ]
-    
-    payment_id = models.AutoField(primary_key=True)
 
+    order_id = models.AutoField(primary_key=True)
     patient = models.ForeignKey(
         Patient,
         on_delete=models.CASCADE,
-        related_name='payments',
-        verbose_name='المريض'
+        related_name='orders'
     )
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    appointment = models.ForeignKey(
-        Appointment,
+    def __str__(self):
+        return f"Order #{self.order_id} - {self.patient}"
+
+
+class OrderItem(models.Model):
+    order_item_id = models.AutoField(primary_key=True)
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
+    product = models.ForeignKey(
+        Product,
         on_delete=models.SET_NULL,
         null=True,
-        blank=True,
-        related_name='payments',
-        verbose_name='الموعد'
+        blank=True
     )
-
-    nutritionist = models.ForeignKey(
-        Nutritionist,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='payments',
-        verbose_name='أخصائي التغذية'
-    )
-# لأنو ممكن تكون دفعة لمنتج أو موعد، مو شرط باقة --> on_delete=models.SET_NULL,
-
     package = models.ForeignKey(
         Package,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='payments',
-        verbose_name='الباقة'
+        related_name='order_items'
     )
+    quantity = models.PositiveIntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
 
-    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='المبلغ')
-    date = models.DateField(verbose_name='التاريخ')
-    time = models.TimeField(verbose_name='الوقت')
-
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='pending',
-        verbose_name='الحالة'
-    )
-
-    type = models.CharField(
-        max_length=50,
-        choices=TYPE_CHOICES,
-        verbose_name='النوع'
-    )
-
-    payment_method = models.CharField(max_length=50, blank=True, verbose_name='طريقة الدفع')
-
-    transaction_id = models.CharField(
-        max_length=255,
-        blank=True,
-        unique=True,
-        verbose_name='معرف المعاملة'
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        db_table = 'payment'
-        verbose_name = 'دفعة'
-        verbose_name_plural = 'الدفعات'
-        ordering = ['-date', '-time']
-        indexes = [
-            models.Index(fields=['patient', 'status']),
-            models.Index(fields=['transaction_id']),
-        ]
-    
     def __str__(self):
-        return f"{self.patient} - {self.amount} - {self.status}"
-
-    package = models.ForeignKey(
-        Package,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='payments',
-        verbose_name='الباقة'
-    )
-
-    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='المبلغ')
-    date = models.DateField(verbose_name='التاريخ')
-    time = models.TimeField(verbose_name='الوقت')
-
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='pending',
-        verbose_name='الحالة'
-    )
-
-    type = models.CharField(
-        max_length=50,
-        choices=TYPE_CHOICES,
-        verbose_name='النوع'
-    )
-
-    payment_method = models.CharField(max_length=50, blank=True, verbose_name='طريقة الدفع')
-
-    transaction_id = models.CharField(
-        max_length=255,
-        blank=True,
-        unique=True,
-        verbose_name='معرف المعاملة'
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        db_table = 'payment'
-        verbose_name = 'دفعة'
-        verbose_name_plural = 'الدفعات'
-        ordering = ['-date', '-time']
-        indexes = [
-            models.Index(fields=['patient', 'status']),
-            models.Index(fields=['transaction_id']),
-        ]
-    
-    def __str__(self):
-        return f"{self.patient} - {self.amount} - {self.status}"
+        item = self.product or self.package
+        return f"{item} x {self.quantity} @ {self.price}"
