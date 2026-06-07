@@ -10,12 +10,19 @@ from django.db.models import Count
 from .models import Package, Workshop, PatientWorkshop
 from .serializers import PackageSerializer, WorkshopListSerializer
 from utils.pagination import StandardPagination
+from .permissions import IsNutritionistOwnerOrReadOnly
+
 
 class PackageViewSet(ModelViewSet):
     queryset = Package.objects.all().order_by('-created_at')
     serializer_class = PackageSerializer
+    permission_classes = [IsNutritionistOwnerOrReadOnly]
     pagination_class = PageNumberPagination
     pagination_class.page_size = 10
+    
+    def perform_create(self, serializer):
+        nutritionist = self.request.user.nutritionist_profile
+        serializer.save(nutritionist=nutritionist)
     @action(detail=False, methods=['get'])
     def stats(self, request):
         # احصاء عدد الاشتراكات لكل باقة
