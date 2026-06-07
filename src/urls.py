@@ -33,8 +33,21 @@ urlpatterns = [
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
 
+    # Cart & Payments
+    path('api/cart/', include('payments.urls')),
+
+    # Users (verify_email standalone view)
+    path('api/', include('users.urls')),
+
     # Contact
     path('api/contact/', include('contact.urls')),
+
+
+    # Publications
+    path('api/publications/', include('publications.urls')),
+
+    # Workshops
+    path('api/workshops/', include('subscriptions.urls')),
 
     # Optional UI:
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
