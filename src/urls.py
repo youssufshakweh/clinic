@@ -42,13 +42,6 @@ urlpatterns = [
     # Contact
     path('api/contact/', include('contact.urls')),
 
-
-    # Publications
-    path('api/publications/', include('publications.urls')),
-
-    # Workshops
-    path('api/workshops/', include('subscriptions.urls')),
-
     # Optional UI:
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
