@@ -6,7 +6,8 @@ class IsPatient(BasePermission):
 
 class IsNutritionist(BasePermission): 
     def has_permission(self, request, view):
-        return request.user and hasattr(request.user, 'patient')
+        return request.user and hasattr(request.user, 'nutritionist_profile')
+
 
 
 class IsPatientUser(BasePermission):

@@ -6,6 +6,7 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from utils.permissions import IsPatientUser
 from django.db.models import Count
+from utils.permissions import IsNutritionistUser
 
 from .models import Package, Workshop, PatientWorkshop
 from .serializers import PackageSerializer, WorkshopListSerializer
@@ -14,6 +15,7 @@ from utils.pagination import StandardPagination
 class PackageViewSet(ModelViewSet):
     queryset = Package.objects.all().order_by('-created_at')
     serializer_class = PackageSerializer
+    permission_classes = [IsNutritionistUser]
     pagination_class = PageNumberPagination
     pagination_class.page_size = 10
     @action(detail=False, methods=['get'])
