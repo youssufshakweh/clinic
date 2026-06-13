@@ -6,6 +6,7 @@ from publications.views import PublicationViewSet
 from patients.views import PatientViewSet
 from nutritionists.views import ProductViewSet
 from users.views import UserViewSet
+from contact.views import ContactViewSet
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
@@ -25,6 +26,7 @@ router.register('api/products', ProductViewSet, basename='products')
 router.register('api/users', UserViewSet, basename='users')
 router.register('api/workshop', WorkshopViewSet, basename='workshops')
 router.register('api/publications', PublicationViewSet, basename='publications')
+router.register('api/contact', ContactViewSet, basename='contacts')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -39,9 +41,6 @@ urlpatterns = [
 
     # Users (verify_email standalone view)
     path('api/', include('users.urls')),
-
-    # Contact
-    path('api/contact/', include('contact.urls')),
 
     # Optional UI:
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

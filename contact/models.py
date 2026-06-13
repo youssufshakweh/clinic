@@ -7,6 +7,9 @@ class Inquiry(models.Model):
     phone = models.CharField(max_length=20, verbose_name='رقم الهاتف')
     message = models.TextField(verbose_name='الرسالة')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاريخ الإرسال')
+    is_read = models.BooleanField(default=False, verbose_name='تمت القراءة')
+    replied_at = models.DateTimeField(null=True, blank=True, verbose_name='تاريخ الرد')
+    reply = models.TextField(null=True, blank=True, verbose_name='الرد')
 
     class Meta:
         db_table = 'inquiry'

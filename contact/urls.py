@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import InquiryCreateView
+from .views import ContactViewSet
 
 urlpatterns = [
-    path('', InquiryCreateView.as_view(), name='contact-inquiry'),
+    path('', ContactViewSet.as_view({'post': 'create'}), name='contact-inquiry'),
 ]

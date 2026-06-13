@@ -57,6 +57,9 @@ INSTALLED_APPS = [
     # Rest Framework
     'rest_framework',
 
+    # django-filter
+    'django_filters',
+
     # suagger ui
     'drf_spectacular',
 
