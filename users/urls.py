@@ -1,10 +1,7 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import UserViewSet
+from django.urls import path
 
-router = DefaultRouter()
-router.register(r'users', UserViewSet, basename='user')
+from .views import VerifyEmailView
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('users/verify_email/', VerifyEmailView.as_view(), name='verify-email'),
 ]

@@ -2,14 +2,20 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from utils.permissions import IsPatientUser
 from django.db.models import Count
+from utils.permissions import IsNutritionistUser
 
-from .models import Package
-from .serializers import PackageSerializer
+from .models import Package, Workshop, PatientWorkshop
+from .serializers import PackageSerializer, WorkshopListSerializer
+from utils.pagination import StandardPagination
 
 class PackageViewSet(ModelViewSet):
     queryset = Package.objects.all().order_by('-created_at')
     serializer_class = PackageSerializer
+    permission_classes = [IsNutritionistUser]
     pagination_class = PageNumberPagination
     pagination_class.page_size = 10
     @action(detail=False, methods=['get'])
@@ -52,3 +58,42 @@ class PackageViewSet(ModelViewSet):
             "least_sold": least_sold,
             "chart_data": chart_data,
         })
+
+
+class WorkshopViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = WorkshopListSerializer
+    pagination_class = StandardPagination
+
+    def get_queryset(self):
+        return Workshop.objects.filter(
+            status__in=['upcoming', 'ongoing']
+        ).order_by('date', 'time')
+
+    def get_permissions(self):
+        if self.action == 'register':
+            return [IsPatientUser()]
+        return [AllowAny()]
+
+    @action(detail=True, methods=['post'])
+    def register(self, request, pk=None):
+        workshop = self.get_object()
+
+        if not hasattr(request.user, 'patient_profile'):
+            return Response(
+                {'error': 'Only patients can register for workshops'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        patient = request.user.patient_profile
+
+        if PatientWorkshop.objects.filter(patient=patient, workshop=workshop).exists():
+            return Response(
+                {'error': 'Already registered for this workshop'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        PatientWorkshop.objects.create(patient=patient, workshop=workshop)
+        return Response(
+            {'message': 'Successfully registered for the workshop'},
+            status=status.HTTP_201_CREATED
+        )

@@ -125,3 +125,47 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
+
+from rest_framework.views import APIView
+from patients.models import Patient
+
+
+class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        otp = request.data.get('otp')
+
+        if not email or not otp:
+            return Response(
+                {'error': 'البريد الالكتروني والرمز مطلوبان'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'البريد الالكتروني غير موجود'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not user.verify_otp(otp):
+            return Response(
+                {'error': 'الرمز غير صحيح أو انتهت صلاحيته'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.is_verified = True
+        user.otp = None
+        user.otp_created_at = None
+        user.save()
+
+        Patient.objects.get_or_create(user=user)
+
+        return Response(
+            {'message': 'تم التحقق من البريد الالكتروني بنجاح'},
+            status=status.HTTP_200_OK
+        )
+
