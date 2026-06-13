@@ -40,7 +40,6 @@ class ContactViewSet(viewsets.ModelViewSet):
                 "detail": f"Failed to send email to {contact.email}: {str(e)}"
             })
 
-        response_serializer = self.get_serializer(contact)
-        return Response(response_serializer.data, status=status.HTTP_200_OK)
+        return Response({"message": "تم إرسال الرد بنجاح"})
 
 
