@@ -15,7 +15,7 @@ from utils.pagination import StandardPagination
 class ContactViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
 
-    queryset = Inquiry.objects.all().order_by('-created_at')
+    queryset = Inquiry.objects.all().order_by('is_read', '-created_at')
     serializer_class = InquirySerializer
     pagination_class = StandardPagination
     filter_backends = [DjangoFilterBackend]
