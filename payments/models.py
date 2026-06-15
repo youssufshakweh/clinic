@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from patients.models import Patient
 from appointments.models import Appointment
 from nutritionists.models import Nutritionist, Product
@@ -153,6 +154,7 @@ class Order(models.Model):
         ('pending', 'قيد الانتظار'),
         ('confirmed', 'مؤكد'),
         ('cancelled', 'ملغى'),
+        ('rejected', 'مرفوض'),
     ]
 
     order_id = models.AutoField(primary_key=True)
@@ -200,3 +202,34 @@ class OrderItem(models.Model):
     def __str__(self):
         item = self.product or self.package
         return f"{item} x {self.quantity} @ {self.price}"
+
+
+class PaymentTransaction(models.Model):
+    id = models.AutoField(primary_key=True)
+    transaction_id = models.CharField(
+        max_length=255,
+        unique=True,
+        verbose_name='رقم المعاملة'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='payment_transactions',
+        verbose_name='المستخدم'
+    )
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='payment_transactions',
+        verbose_name='الطلب'
+    )
+    submitted_at = models.DateTimeField(auto_now_add=True, verbose_name='تاريخ الإرسال')
+
+    class Meta:
+        db_table = 'payment_transaction'
+        verbose_name = 'معاملة دفع'
+        verbose_name_plural = 'معاملات الدفع'
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"Transaction {self.transaction_id} - Order #{self.order_id}"
