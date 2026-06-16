@@ -164,7 +164,7 @@ class OrderListView(APIView):
 
 class SubmitTransactionView(APIView):
     permission_classes = [IsPatientUser]
-
+    serializer_class = PaymentTransactionSerializer
     def post(self, request):
         serializer = PaymentTransactionSerializer(data=request.data)
         if not serializer.is_valid():

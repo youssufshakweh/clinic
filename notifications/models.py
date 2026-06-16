@@ -58,7 +58,7 @@ class Notification(models.Model):
     ]
 
     notification_id = models.AutoField(primary_key=True)
-    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications', verbose_name='المستلم')
+    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications', verbose_name='المستلم', null=True,blank=True)
     title = models.CharField(max_length=255, verbose_name='العنوان')
     info = models.TextField(verbose_name='المعلومات')
     time = models.DateTimeField(auto_now_add=True, verbose_name='الوقت')
@@ -73,7 +73,7 @@ class Notification(models.Model):
         blank=True,
         verbose_name='نوع الإشعار'
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاريخ الإنشاء')
+    created_at = models.DateTimeField(auto_now_add=True,null=True, verbose_name='تاريخ الإنشاء')
 
     class Meta:
         db_table = 'notification'

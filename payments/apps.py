@@ -5,5 +5,7 @@ class PaymentsConfig(AppConfig):
     name = 'payments'
 
     def ready(self):
+        import payments.signals
+
         from core.admin import autoregister
         autoregister('payments')
