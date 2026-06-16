@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Payment, Cart, CartItem, Order, OrderItem
+from .models import Payment, Cart, CartItem, Order, OrderItem, PaymentTransaction
 from nutritionists.models import Product
 from subscriptions.models import Package
 
@@ -74,3 +74,23 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['order_id', 'items', 'total_price', 'status', 'created_at']
+
+
+class OrderListSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['order_id', 'items', 'total_price', 'status', 'created_at']
+        read_only_fields = ['order_id', 'total_price', 'status', 'created_at']
+
+
+class PaymentTransactionSerializer(serializers.ModelSerializer):
+    order_id = serializers.PrimaryKeyRelatedField(
+        queryset=Order.objects.all(), source='order', write_only=True
+    )
+
+    class Meta:
+        model = PaymentTransaction
+        fields = ['id', 'transaction_id', 'order_id', 'submitted_at']
+        read_only_fields = ['id', 'submitted_at']

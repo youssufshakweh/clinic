@@ -1,3 +1,9 @@
-from django.contrib import admin
+from django.apps import AppConfig
 
-# Register your models here.
+
+class AppointmentsConfig(AppConfig):
+    name = 'appointments'
+
+    def ready(self):
+        from core.admin import autoregister
+        autoregister('appointments')

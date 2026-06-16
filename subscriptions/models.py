@@ -94,6 +94,7 @@ class Workshop(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='upcoming', verbose_name='الحالة')
     num_participants = models.IntegerField(default=0, verbose_name='عدد المشاركين')
     max_participants = models.IntegerField(null=True, blank=True, verbose_name='الحد الأقصى للمشاركين')
+    max_attendees = models.PositiveIntegerField(null=True, blank=True, verbose_name='الحد الأقصى للحضور')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -109,7 +110,46 @@ class Workshop(models.Model):
     
     def __str__(self):
         return self.title
-    
+
+    @property
+    def is_full(self):
+        if self.max_attendees is None:
+            return False
+        confirmed_count = self.attendances.filter(status='confirmed').count()
+        return confirmed_count >= self.max_attendees
+
+
+class WorkshopAttendance(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'قيد الانتظار'),
+        ('accepted', 'مقبول'),
+        ('rejected', 'مرفوض'),
+    ]
+
+    workshop = models.ForeignKey(
+        Workshop,
+        on_delete=models.CASCADE,
+        related_name='attendances',
+        verbose_name='الورشة'
+    )
+    email = models.EmailField(verbose_name='البريد الالكتروني')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاريخ التسجيل')
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        verbose_name='الحالة'
+    )
+
+    class Meta:
+        db_table = 'workshop_attendance'
+        verbose_name = 'حضور ورشة'
+        verbose_name_plural = 'حضور الورش'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.email} - {self.workshop.title} ({self.status})"
+
 
 class PatientWorkshop(models.Model):
     patient = models.ForeignKey(
