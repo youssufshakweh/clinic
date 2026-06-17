@@ -41,6 +41,17 @@ class AddToCartView(APIView):
         package = serializer.validated_data.get('package')
         quantity = serializer.validated_data.get('quantity', 1)
 
+        appointment = serializer.validated_data.get('appointment')
+
+        if appointment:
+            if CartItem.objects.filter(cart=cart, appointment=appointment).exists():
+                return Response(
+                    {'error': 'هذا الموعد موجود بالفعل في السلة'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            CartItem.objects.create(cart=cart, appointment=appointment, quantity=1)
+            return Response(CartSerializer(cart).data, status=status.HTTP_201_CREATED)
+
         if product:
             if quantity > product.quantity:
                 return Response(
@@ -115,11 +126,12 @@ class CheckoutView(APIView):
         except Cart.DoesNotExist:
             return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
 
-        items = cart.items.select_related('product', 'package').all()
+        items = cart.items.select_related('product', 'package', 'appointment').all()
         if not items.exists():
             return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
 
-        total_price = 0
+        from decimal import Decimal
+        total_price = Decimal('0.00')
         for item in items:
             if item.product:
                 total_price += item.product.price * item.quantity
@@ -133,11 +145,17 @@ class CheckoutView(APIView):
         )
 
         for item in items:
-            unit_price = item.product.price if item.product else item.package.price
+            if item.product:
+                unit_price = item.product.price
+            elif item.package:
+                unit_price = item.package.price
+            else:
+                unit_price = Decimal('0.00')
             OrderItem.objects.create(
                 order=order,
                 product=item.product,
                 package=item.package,
+                appointment=item.appointment,
                 quantity=item.quantity,
                 price=unit_price,
             )
@@ -164,7 +182,7 @@ class OrderListView(APIView):
 
 class SubmitTransactionView(APIView):
     permission_classes = [IsPatientUser]
-    serializer_class = PaymentTransactionSerializer
+
     def post(self, request):
         serializer = PaymentTransactionSerializer(data=request.data)
         if not serializer.is_valid():
