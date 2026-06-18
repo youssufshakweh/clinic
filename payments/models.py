@@ -135,17 +135,26 @@ class CartItem(models.Model):
         blank=True,
         related_name='cart_items'
     )
+    appointment = models.ForeignKey(
+        Appointment,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cart_items',
+        verbose_name='الموعد'
+    )
     quantity = models.PositiveIntegerField(default=1)
 
     def save(self, *args, **kwargs):
-        if self.product and self.package:
-            raise ValidationError('CartItem cannot have both product and package.')
-        if not self.product and not self.package:
-            raise ValidationError('CartItem must have either a product or a package.')
+        filled = sum(1 for x in [self.product, self.package, self.appointment] if x)
+        if filled > 1:
+            raise ValidationError('CartItem must have exactly one of: product, package, or appointment.')
+        if filled == 0:
+            raise ValidationError('CartItem must have exactly one of: product, package, or appointment.')
         super().save(*args, **kwargs)
 
     def __str__(self):
-        item = self.product or self.package
+        item = self.product or self.package or self.appointment
         return f"{item} x {self.quantity}"
 
 
@@ -196,11 +205,19 @@ class OrderItem(models.Model):
         blank=True,
         related_name='order_items'
     )
+    appointment = models.ForeignKey(
+        Appointment,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='order_items',
+        verbose_name='الموعد'
+    )
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        item = self.product or self.package
+        item = self.product or self.package or self.appointment
         return f"{item} x {self.quantity} @ {self.price}"
 
 

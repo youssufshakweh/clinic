@@ -92,7 +92,7 @@ class AvailableSlotsView(APIView):
 
 class BookAppointmentView(APIView):
     permission_classes = [IsPatientUser]
-    serializer_class = AppointmentBookSerializer
+
     def post(self, request):
         serializer = AppointmentBookSerializer(data=request.data)
         if not serializer.is_valid():
@@ -185,6 +185,14 @@ class BookAppointmentView(APIView):
                 {'error': 'هذا الموعد محجوز مسبقاً'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        from payments.models import Cart, CartItem
+        cart, _ = Cart.objects.get_or_create(patient=patient)
+        CartItem.objects.get_or_create(
+            cart=cart,
+            appointment=appointment,
+            defaults={'quantity': 1},
+        )
 
         return Response(
             AppointmentDetailSerializer(appointment).data,
