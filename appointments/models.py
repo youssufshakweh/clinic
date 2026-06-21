@@ -47,15 +47,18 @@ class Appointment(models.Model):
         choices=TYPE_CHOICES,
         verbose_name='نوع الموعد'
     )
+    start_time = models.TimeField(null=True, blank=True, verbose_name='وقت البداية')
+    end_time = models.TimeField(null=True, blank=True, verbose_name='وقت الانتهاء')
+    notes = models.TextField(blank=True, verbose_name='الملاحظات')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         db_table = 'appointment'
         verbose_name = 'موعد'
         verbose_name_plural = 'المواعيد'
         ordering = ['-date', '-time']
-        unique_together = ('patient', 'nutritionist', 'date', 'time')
+        unique_together = (('date', 'start_time'),)
         indexes = [
             models.Index(fields=['patient', 'date']),
             models.Index(fields=['nutritionist', 'status']),
@@ -64,10 +67,31 @@ class Appointment(models.Model):
     def __str__(self):
         return f"{self.patient} - {self.date} {self.time}"
 
-class Note (models.Model):
-    appointment = models.ForeignKey(
-        Appointment,
-        on_delete=models.CASCADE 
+class Schedule(models.Model):
+    DAY_CHOICES = [
+        ('monday', 'الإثنين'),
+        ('tuesday', 'الثلاثاء'),
+        ('wednesday', 'الأربعاء'),
+        ('thursday', 'الخميس'),
+        ('friday', 'الجمعة'),
+        ('saturday', 'السبت'),
+        ('sunday', 'الأحد'),
+    ]
+
+    day_of_week = models.CharField(
+        max_length=20,
+        choices=DAY_CHOICES,
+        unique=True,
+        verbose_name='اليوم'
     )
-    name = models.CharField(max_length=100, blank=True) 
-    content = models.CharField(max_length=1000, blank=True) 
+    start_time = models.TimeField(verbose_name='وقت بداية الدوام')
+    end_time = models.TimeField(verbose_name='وقت انتهاء الدوام')
+
+    class Meta:
+        db_table = 'schedule'
+        verbose_name = 'جدول'
+        verbose_name_plural = 'الجداول'
+        ordering = ['day_of_week']
+
+    def __str__(self):
+        return f"{self.get_day_of_week_display()}: {self.start_time} - {self.end_time}"

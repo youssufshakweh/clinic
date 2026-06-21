@@ -7,3 +7,4 @@ class PaymentsConfig(AppConfig):
     def ready(self):
         from core.admin import autoregister
         autoregister('payments')
+        import payments.signals  # noqa: F401

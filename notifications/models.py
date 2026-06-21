@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from patients.models import Patient
 
 class Message(models.Model):
@@ -49,22 +50,39 @@ class Notification(models.Model):
         ('read', 'مقروءة'),
         ('archived', 'مؤرشفة'),
     ]
-    
+
+    TYPE_CHOICES = [
+        ('appointment_reminder', 'تذكير موعد'),
+        ('order_update', 'تحديث طلب'),
+        ('general', 'عام'),
+    ]
+
     notification_id = models.AutoField(primary_key=True)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='notifications', verbose_name='المريض')
+    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications', verbose_name='المستلم', null=True,blank=True)
     title = models.CharField(max_length=255, verbose_name='العنوان')
     info = models.TextField(verbose_name='المعلومات')
     time = models.DateTimeField(auto_now_add=True, verbose_name='الوقت')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unread', verbose_name='الحالة')
-    
+
+    message = models.TextField(blank=True, null=True, verbose_name='الرسالة')
+    is_read = models.BooleanField(default=False, verbose_name='مقروء')
+    notification_type = models.CharField(
+        max_length=50,
+        choices=TYPE_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name='نوع الإشعار'
+    )
+    created_at = models.DateTimeField(auto_now_add=True,null=True, verbose_name='تاريخ الإنشاء')
+
     class Meta:
         db_table = 'notification'
         verbose_name = 'إشعار'
         verbose_name_plural = 'الإشعارات'
         ordering = ['-time']
         indexes = [
-            models.Index(fields=['patient', 'status']),
+            models.Index(fields=['recipient', 'status']),
         ]
-    
+
     def __str__(self):
-        return f"{self.patient} - {self.title}"
+        return f"{self.recipient} - {self.title}"
