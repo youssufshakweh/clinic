@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from patients.models import Patient
 from appointments.models import Appointment
 from nutritionists.models import Nutritionist, Product
@@ -134,17 +135,26 @@ class CartItem(models.Model):
         blank=True,
         related_name='cart_items'
     )
+    appointment = models.ForeignKey(
+        Appointment,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cart_items',
+        verbose_name='الموعد'
+    )
     quantity = models.PositiveIntegerField(default=1)
 
     def save(self, *args, **kwargs):
-        if self.product and self.package:
-            raise ValidationError('CartItem cannot have both product and package.')
-        if not self.product and not self.package:
-            raise ValidationError('CartItem must have either a product or a package.')
+        filled = sum(1 for x in [self.product, self.package, self.appointment] if x)
+        if filled > 1:
+            raise ValidationError('CartItem must have exactly one of: product, package, or appointment.')
+        if filled == 0:
+            raise ValidationError('CartItem must have exactly one of: product, package, or appointment.')
         super().save(*args, **kwargs)
 
     def __str__(self):
-        item = self.product or self.package
+        item = self.product or self.package or self.appointment
         return f"{item} x {self.quantity}"
 
 
@@ -153,6 +163,7 @@ class Order(models.Model):
         ('pending', 'قيد الانتظار'),
         ('confirmed', 'مؤكد'),
         ('cancelled', 'ملغى'),
+        ('rejected', 'مرفوض'),
     ]
 
     order_id = models.AutoField(primary_key=True)
@@ -194,9 +205,48 @@ class OrderItem(models.Model):
         blank=True,
         related_name='order_items'
     )
+    appointment = models.ForeignKey(
+        Appointment,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='order_items',
+        verbose_name='الموعد'
+    )
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        item = self.product or self.package
+        item = self.product or self.package or self.appointment
         return f"{item} x {self.quantity} @ {self.price}"
+
+
+class PaymentTransaction(models.Model):
+    id = models.AutoField(primary_key=True)
+    transaction_id = models.CharField(
+        max_length=255,
+        unique=True,
+        verbose_name='رقم المعاملة'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='payment_transactions',
+        verbose_name='المستخدم'
+    )
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='payment_transactions',
+        verbose_name='الطلب'
+    )
+    submitted_at = models.DateTimeField(auto_now_add=True, verbose_name='تاريخ الإرسال')
+
+    class Meta:
+        db_table = 'payment_transaction'
+        verbose_name = 'معاملة دفع'
+        verbose_name_plural = 'معاملات الدفع'
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"Transaction {self.transaction_id} - Order #{self.order_id}"

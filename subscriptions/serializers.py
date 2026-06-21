@@ -35,6 +35,8 @@ class PlanSerializer(serializers.ModelSerializer):
 
 
 class WorkshopSerializer(serializers.ModelSerializer):
+    is_full = serializers.SerializerMethodField()
+
     class Meta:
         model = Workshop
         fields = [
@@ -51,16 +53,25 @@ class WorkshopSerializer(serializers.ModelSerializer):
             'status',
             'num_participants',
             'max_participants',
+            'is_full',
             'created_at',
             'updated_at'
         ]
         read_only_fields = ['workshop_id', 'created_at', 'updated_at']
 
+    def get_is_full(self, obj):
+        return obj.is_full
+
 
 class WorkshopListSerializer(serializers.ModelSerializer):
+    is_full = serializers.SerializerMethodField()
+
     class Meta:
         model = Workshop
-        fields = ['workshop_id', 'title', 'date', 'overview', 'img']
+        fields = ['workshop_id', 'title', 'date', 'overview', 'img', 'max_attendees', 'is_full']
+
+    def get_is_full(self, obj):
+        return obj.is_full
 
 
 class WorkshopJoinRequestSerializer(serializers.Serializer):
