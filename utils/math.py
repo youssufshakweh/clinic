@@ -10,7 +10,7 @@ def calculate_percentage_change(current: int | float, previous: int | float) -> 
         float | None: The percentage change from previous to current, or None if previous is zero.
     """
     if previous == 0:
-        return None  # Avoid division by zero; could also raise an exception or return a specific value
+        return 100.0 if current > 0 else 0.0
     
     change = current - previous
     percentage_change = round((change / previous) * 100, 2)

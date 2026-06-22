@@ -52,6 +52,8 @@ urlpatterns = [
     # Contact
     path('api/contact/', include('contact.urls')),
 
+    path('api/dashboard/', include('dashboard.urls')),
+
 
     # Optional UI:
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
