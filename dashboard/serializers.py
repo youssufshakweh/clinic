@@ -67,3 +67,20 @@ class AppointmentStatsSerializer(serializers.Serializer):
     completed_appointments = serializers.IntegerField()
     peak_booking_day = PeakBookingDaySerializer()
     appointment_distribution = AppointmentDistributionSerializer()
+
+
+class BestSellingProductSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
+    product_name = serializers.CharField()
+    total_quantity = serializers.IntegerField()
+
+
+class ProductRevenueItemSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
+    product_name = serializers.CharField()
+    total_revenue = serializers.FloatField()
+
+
+class ProductStatsSerializer(serializers.Serializer):
+    best_selling_product = BestSellingProductSerializer(allow_null=True)
+    revenue_distribution = serializers.ListField(child=ProductRevenueItemSerializer())

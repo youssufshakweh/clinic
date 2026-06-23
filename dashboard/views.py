@@ -15,7 +15,8 @@ from utils.math import calculate_percentage_change
 from .serializers import (
     CardSerializer,
     AppointmentStatsQuerySerializer,
-    AppointmentStatsSerializer
+    AppointmentStatsSerializer,
+    ProductStatsSerializer
 )
 
 class HomeViewSet(viewsets.ViewSet):
@@ -39,6 +40,13 @@ class HomeViewSet(viewsets.ViewSet):
         
         data = self._get_appointment_stats_data(query_serializer.validated_data)
         serializer = AppointmentStatsSerializer(data)
+        return Response(serializer.data)
+
+    @extend_schema(responses={200: ProductStatsSerializer})
+    @action(detail=False, methods=['get'])
+    def product_stats(self, request: Request) -> Response:
+        data = self._get_product_stats_data()
+        serializer = ProductStatsSerializer(data)
         return Response(serializer.data)
 
     def _get_data(self):
@@ -139,3 +147,12 @@ class HomeViewSet(viewsets.ViewSet):
             counts = []
         
         return labels, counts
+
+    def _get_product_stats_data(self) -> dict:
+        best_selling_product = pay_selectors.get_best_selling_product()
+        revenue_distribution = pay_selectors.get_product_revenue_distribution()
+        
+        return {
+            'best_selling_product': best_selling_product,
+            'revenue_distribution': revenue_distribution
+        }
