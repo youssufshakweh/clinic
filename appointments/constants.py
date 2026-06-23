@@ -7,3 +7,8 @@ class AppointmentStatus(Enum):
     COMPLETED = 'completed'
     CANCELLED = 'cancelled'
     NO_SHOW = 'no-show'
+
+
+class AppointmentType(Enum):
+    ONLINE = 'online'
+    IN_PERSON = 'in-person'

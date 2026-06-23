@@ -12,7 +12,11 @@ from patients import selectors as pat_selectors
 from payments import selectors  as pay_selectors
 from utils.math import calculate_percentage_change
 
-from .serializers import CardSerializer
+from .serializers import (
+    CardSerializer,
+    AppointmentStatsQuerySerializer,
+    AppointmentStatsSerializer
+)
 
 class HomeViewSet(viewsets.ViewSet):
     # permission_classes = [IsAdminUser]
@@ -22,6 +26,19 @@ class HomeViewSet(viewsets.ViewSet):
     def overview(self, request: Request) -> Response:
         data = self._get_data()
         serializer = CardSerializer(data)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[AppointmentStatsQuerySerializer],
+        responses={200: AppointmentStatsSerializer}
+    )
+    @action(detail=False, methods=['get'])
+    def appointment_stats(self, request: Request) -> Response:
+        query_serializer = AppointmentStatsQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        
+        data = self._get_appointment_stats_data(query_serializer.validated_data)
+        serializer = AppointmentStatsSerializer(data)
         return Response(serializer.data)
 
     def _get_data(self):
@@ -78,3 +95,47 @@ class HomeViewSet(viewsets.ViewSet):
             "previous_month": prev_month,
             "percentage_change": calculate_percentage_change(curr_month, prev_month)
         }
+
+    def _get_appointment_stats_data(self, validated_data: dict) -> dict:
+        groupby = validated_data.get('groupby', 'weekday')
+        appointment_type = validated_data.get('type')
+        year = validated_data.get('year')
+        month = validated_data.get('month')
+        week = validated_data.get('week')
+        
+        total_completed = app_selectors.get_total_completed_appointments(appointment_type)
+        peak_booking_day = app_selectors.get_most_booking_weekday(appointment_type)
+        distribution_data = app_selectors.get_appointments_by_period(
+            groupby=groupby,
+            appointment_type=appointment_type,
+            year=year,
+            month=month,
+            week=week
+        )
+        
+        labels, counts = self._format_distribution_data(groupby, distribution_data)
+        
+        return {
+            'completed_appointments': total_completed,
+            'peak_booking_day': peak_booking_day,
+            'appointment_distribution': {
+                'labels': labels,
+                'counts': counts
+            }
+        }
+
+    def _format_distribution_data(self, groupby: str, distribution_data: list) -> tuple[list[str], list[int]]:
+        if groupby == 'weekday':
+            labels = [item['day_name'] for item in distribution_data]
+            counts = [item['count'] for item in distribution_data]
+        elif groupby == 'month':
+            labels = [item['month_name'] for item in distribution_data]
+            counts = [item['count'] for item in distribution_data]
+        elif groupby == 'year':
+            labels = [str(item['year']) for item in distribution_data]
+            counts = [item['count'] for item in distribution_data]
+        else:
+            labels = []
+            counts = []
+        
+        return labels, counts
