@@ -1,4 +1,4 @@
-def calculate_percentage_change(current: int | float, previous: int | float) -> float | None:
+def calculate_percentage_change(current: int | float, previous: int | float) -> float:
     """
     Calculate the percentage change between two numbers.
 
